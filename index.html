@@ -280,35 +280,74 @@ async function saveVocab(){
   catch(e){ console.error('save failed', e); }
 }
 
+let vocabShellBuilt = false;
+
 function renderVocab(){
   const root = document.getElementById('tab-vocab');
+
+  // 初回だけ枠(検索欄・チップ・追加フォーム)を作る。
+  // 以降は中身(単語リストやチップの選択状態)だけを更新し、
+  // 検索欄自体を作り直さないようにする(作り直すとフォーカスが外れてキーボードが閉じてしまうため)。
+  if(!vocabShellBuilt){
+    root.innerHTML = `
+      <p class="eyebrow">記録 · 単語</p>
+      <h2 class="section-title">単語帳</h2>
+      <div class="searchbar">
+        <input id="search-input" placeholder="単語や意味で検索" value="${escapeAttr(searchTerm)}">
+      </div>
+      <div class="chips" id="cat-chips">
+        ${CATS.map(c=>`<button class="chip ${c===activeCat?'active':''}" data-cat="${c}">${c}</button>`).join('')}
+      </div>
+      <div class="card" style="border-color:var(--echo-dim);">
+        <label>単語を追加</label>
+        <input id="new-word" placeholder="単語 (例: mylhana)">
+        <select id="new-cat">
+          ${CATS.filter(c=>c!=="すべて").map(c=>`<option value="${c}">${c}</option>`).join('')}
+        </select>
+        <textarea id="new-meaning" rows="2" placeholder="意味"></textarea>
+        <button class="primary" id="add-word-btn">単語帳に追加</button>
+      </div>
+      <div id="word-list"></div>
+    `;
+
+    document.getElementById('search-input').oninput = (e)=>{
+      searchTerm = e.target.value;
+      renderWordList();
+    };
+    document.getElementById('add-word-btn').onclick = async ()=>{
+      const w = document.getElementById('new-word').value.trim();
+      const cat = document.getElementById('new-cat').value;
+      const m = document.getElementById('new-meaning').value.trim();
+      if(!w || !m) return;
+      vocab.push({w,cat,m});
+      await saveVocab();
+      document.getElementById('new-word').value = '';
+      document.getElementById('new-meaning').value = '';
+      renderWordList();
+    };
+
+    vocabShellBuilt = true;
+  }
+
+  renderChips();
+  renderWordList();
+}
+
+function renderChips(){
+  const chipsRoot = document.getElementById('cat-chips');
+  chipsRoot.innerHTML = CATS.map(c=>`<button class="chip ${c===activeCat?'active':''}" data-cat="${c}">${c}</button>`).join('');
+  chipsRoot.querySelectorAll('.chip').forEach(b=>{
+    b.onclick = ()=>{ activeCat = b.dataset.cat; renderChips(); renderWordList(); };
+  });
+}
+
+function renderWordList(){
   const filtered = vocab.filter(x=>{
     const catOk = activeCat==="すべて" || x.cat===activeCat;
     const term = searchTerm.trim();
     const searchOk = !term || x.w.includes(term) || x.m.includes(term);
     return catOk && searchOk;
   });
-
-  root.innerHTML = `
-    <p class="eyebrow">記録 · 単語</p>
-    <h2 class="section-title">単語帳</h2>
-    <div class="searchbar">
-      <input id="search-input" placeholder="単語や意味で検索" value="${escapeAttr(searchTerm)}">
-    </div>
-    <div class="chips" id="cat-chips">
-      ${CATS.map(c=>`<button class="chip ${c===activeCat?'active':''}" data-cat="${c}">${c}</button>`).join('')}
-    </div>
-    <div class="card" style="border-color:var(--echo-dim);">
-      <label>単語を追加</label>
-      <input id="new-word" placeholder="単語 (例: mylhana)">
-      <select id="new-cat">
-        ${CATS.filter(c=>c!=="すべて").map(c=>`<option value="${c}">${c}</option>`).join('')}
-      </select>
-      <textarea id="new-meaning" rows="2" placeholder="意味"></textarea>
-      <button class="primary" id="add-word-btn">単語帳に追加</button>
-    </div>
-    <div id="word-list"></div>
-  `;
 
   const list = document.getElementById('word-list');
   if(filtered.length===0){
@@ -332,24 +371,11 @@ function renderVocab(){
     }).join('');
   }
 
-  document.getElementById('search-input').oninput = (e)=>{ searchTerm = e.target.value; renderVocab(); };
-  document.querySelectorAll('#cat-chips .chip').forEach(b=>{
-    b.onclick = ()=>{ activeCat = b.dataset.cat; renderVocab(); };
-  });
-  document.getElementById('add-word-btn').onclick = async ()=>{
-    const w = document.getElementById('new-word').value.trim();
-    const cat = document.getElementById('new-cat').value;
-    const m = document.getElementById('new-meaning').value.trim();
-    if(!w || !m) return;
-    vocab.push({w,cat,m});
-    await saveVocab();
-    renderVocab();
-  };
-  document.querySelectorAll('[data-del]').forEach(b=>{
+  list.querySelectorAll('[data-del]').forEach(b=>{
     b.onclick = async ()=>{
       vocab.splice(parseInt(b.dataset.del),1);
       await saveVocab();
-      renderVocab();
+      renderWordList();
     };
   });
 }
