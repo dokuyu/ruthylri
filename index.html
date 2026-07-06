@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ruthylri 学習帳</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#171423">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ruthylri">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root{
+  --void:#171423;
+  --dusk:#221E36;
+  --panel:#2A2542;
+  --line:#3E3860;
+  --mist:#F1ECE2;
+  --mist-dim:#B9B3C9;
+  --echo:#7FE0C4;
+  --echo-dim:#4D9C86;
+  --warmth:#E8A87C;
+  --warmth-dim:#B9805D;
+  --danger:#D98282;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--void);
+  color:var(--mist);
+  font-family:'Zen Kaku Gothic New',sans-serif;
+  min-height:100vh;
+}
+.wrap{max-width:760px;margin:0 auto;padding:32px 20px 80px;}
+
+.hero{position:relative;text-align:center;padding:36px 0 28px;overflow:hidden;}
+.hero svg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:340px;height:340px;opacity:.5;pointer-events:none;}
+.hero .ring{fill:none;stroke:var(--echo);opacity:0;transform-origin:center;animation:ripple 6s ease-out infinite;}
+.hero .ring:nth-child(2){animation-delay:2s;}
+.hero .ring:nth-child(3){animation-delay:4s;}
+@keyframes ripple{
+  0%{r:20;opacity:.55;stroke-width:1.5;}
+  100%{r:160;opacity:0;stroke-width:.3;}
+}
+.hero h1{position:relative;font-family:'Shippori Mincho',serif;font-weight:700;font-size:30px;margin:0 0 6px;letter-spacing:.02em;}
+.hero .romaji{position:relative;font-family:'JetBrains Mono',monospace;color:var(--echo);font-size:14px;letter-spacing:.12em;margin:0 0 10px;}
+.hero p{position:relative;font-size:13px;color:var(--mist-dim);margin:0;line-height:1.7;max-width:420px;margin:0 auto;}
+
+nav{display:flex;gap:2px;background:var(--panel);border:.5px solid var(--line);border-radius:10px;padding:4px;margin:28px 0 24px;}
+nav button{
+  flex:1;background:transparent;border:none;color:var(--mist-dim);
+  font-family:'Zen Kaku Gothic New',sans-serif;font-size:14px;padding:10px 6px;
+  border-radius:8px;cursor:pointer;transition:background .15s,color .15s;
+}
+nav button.active{background:var(--void);color:var(--echo);}
+nav button:hover:not(.active){color:var(--mist);}
+
+.eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.14em;color:var(--warmth-dim);text-transform:uppercase;margin:0 0 6px;}
+.section-title{font-family:'Shippori Mincho',serif;font-size:19px;margin:0 0 16px;font-weight:700;}
+
+.card{background:var(--panel);border:.5px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:12px;}
+.row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+.word{font-family:'JetBrains Mono','Zen Kaku Gothic New',monospace;font-size:17px;color:var(--echo);}
+.tag{font-size:11px;color:var(--warmth);background:rgba(232,168,124,.12);border:.5px solid var(--warmth-dim);border-radius:20px;padding:2px 10px;white-space:nowrap;}
+.meaning{font-size:13px;color:var(--mist-dim);margin-top:4px;line-height:1.6;}
+.small-btn{background:transparent;border:.5px solid var(--line);color:var(--mist-dim);border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer;}
+.small-btn:hover{border-color:var(--danger);color:var(--danger);}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
+.chip{font-size:12px;padding:5px 12px;border-radius:20px;border:.5px solid var(--line);color:var(--mist-dim);background:transparent;cursor:pointer;}
+.chip.active{background:var(--echo);border-color:var(--echo);color:var(--void);font-weight:500;}
+
+input,select,textarea{
+  width:100%;background:var(--void);border:.5px solid var(--line);color:var(--mist);
+  border-radius:8px;padding:9px 12px;font-size:14px;font-family:inherit;margin-bottom:10px;
+}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--echo);}
+label{font-size:12px;color:var(--mist-dim);display:block;margin-bottom:4px;}
+
+button.primary{
+  background:var(--echo);color:var(--void);border:none;border-radius:8px;
+  padding:10px 18px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;
+}
+button.primary:hover{background:#96e8d0;}
+button.ghost{
+  background:transparent;border:.5px solid var(--line);color:var(--mist-dim);
+  border-radius:8px;padding:10px 18px;font-size:14px;cursor:pointer;font-family:inherit;
+}
+button.ghost:hover{border-color:var(--mist-dim);color:var(--mist);}
+
+.searchbar{display:flex;gap:8px;margin-bottom:12px;}
+.searchbar input{margin-bottom:0;}
+
+.conj-table{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0 6px;}
+.conj-cell{background:var(--void);border:.5px solid var(--line);border-radius:8px;padding:10px 12px;}
+.conj-cell .suffix{font-family:'JetBrains Mono',monospace;color:var(--warmth);font-size:11px;}
+.conj-cell .form{font-family:'JetBrains Mono','Zen Kaku Gothic New',monospace;color:var(--echo);font-size:16px;margin:2px 0;}
+.conj-cell .gloss{font-size:11px;color:var(--mist-dim);}
+
+.drill-box{background:var(--panel);border:.5px solid var(--line);border-radius:12px;padding:20px;text-align:center;}
+.drill-prompt{font-size:15px;margin-bottom:14px;line-height:1.7;}
+.drill-prompt b{color:var(--warmth);font-weight:500;}
+.feedback{font-size:13px;margin-top:10px;min-height:20px;}
+.feedback.correct{color:var(--echo);}
+.feedback.wrong{color:var(--danger);}
+
+.quiz-choice{
+  display:block;width:100%;text-align:left;background:var(--void);border:.5px solid var(--line);
+  color:var(--mist);border-radius:8px;padding:11px 14px;margin-bottom:8px;font-size:14px;cursor:pointer;font-family:inherit;
+}
+.quiz-choice:hover{border-color:var(--echo);}
+.quiz-choice.correct{border-color:var(--echo);background:rgba(127,224,196,.1);}
+.quiz-choice.wrong{border-color:var(--danger);background:rgba(217,130,130,.1);}
+
+.score-strip{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--mist-dim);margin-bottom:14px;}
+.score-strip span b{color:var(--echo);font-size:16px;}
+
+.empty{text-align:center;padding:30px 10px;color:var(--mist-dim);font-size:13px;}
+.hidden{display:none;}
+
+.mark{color:var(--warmth);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <svg viewBox="0 0 340 340" aria-hidden="true">
+      <circle class="ring" cx="170" cy="170" r="20"/>
+      <circle class="ring" cx="170" cy="170" r="20"/>
+      <circle class="ring" cx="170" cy="170" r="20"/>
+    </svg>
+    <h1>ruthylri 学習帳</h1>
+    <p class="romaji">ru + thyl + ri</p>
+    <p>「やさしさを分け合う者たち」 — 第五宇宙 星23区画語、独ュ゛さんによる言語資料をもとにした学習帳</p>
+  </div>
+
+  <nav>
+    <button class="active" data-tab="vocab">単語帳</button>
+    <button data-tab="conj">活用ドリル</button>
+    <button data-tab="quiz">クイズ</button>
+  </nav>
+
+  <div id="tab-vocab"></div>
+  <div id="tab-conj" class="hidden"></div>
+  <div id="tab-quiz" class="hidden"></div>
+
+</div>
+
+<script>
+const SEED = [
+  {w:"myl",cat:"名詞",m:"茹で汁 / 素敵なことの残響 / ポジティブな気持ち / 心に残る暖かさ"},
+  {w:"pyl",cat:"名詞",m:"ふわふわしたもの / 柔らかい塊 / もふもふ"},
+  {w:"mylpyl",cat:"名詞",m:"のようぴょき(四つ目の生き物のペット) / 幸せなふわふわ"},
+  {w:"hana",cat:"名詞",m:"花 / 美しいもの / 心を和らげるもの / 季節を知らせるもの"},
+  {w:"vel",cat:"名詞",m:"大まかな時間 / 時の流れ / 季節や出来事の経過"},
+  {w:"thyl",cat:"名詞",m:"やさしさのじかん / 心が落ち着くひととき"},
+  {w:"ruma",cat:"名詞",m:"ごはん / 分け合う食べ物 (ru+ma)"},
+  {w:"ma",cat:"名詞",m:"満たされるもの、ご飯のようなもの"},
+  {w:"aka",cat:"名詞",m:"空、広がるところ、見上げる先"},
+  {w:"vilhana",cat:"名詞",m:"光る花(夜になると光る。手元の光がわり)"},
+  {w:"vunhana",cat:"名詞",m:"鳴る花(音が鳴る花)"},
+  {w:"kethana",cat:"名詞",m:"常にこちらを向く花。独ュ゛たちを食うという噂"},
+  {w:"lyl",cat:"形容詞",m:"小さい / 少ない / わずかな / ささやかな"},
+  {w:"syl",cat:"形容詞",m:"大きい / 多い / 豊かな / 満ちた"},
+  {w:"bud",cat:"形容詞",m:"短い / 若い / 未成熟な / 途中である"},
+  {w:"vine",cat:"形容詞",m:"長い / 続く / 伸びている"},
+  {w:"mamm",cat:"形容詞",m:"いっぱい / 満腹 / 満たされた / 十分な(maが重なった形)"},
+  {w:"thur",cat:"形容詞",m:"強い、力がある"},
+  {w:"vol",cat:"形容詞",m:"良い"},
+  {w:"zel",cat:"形容詞",m:"悪い"},
+  {w:"nev",cat:"形容詞",m:"新しい"},
+  {w:"kor",cat:"形容詞",m:"古い"},
+  {w:"fir",cat:"形容詞",m:"熱い"},
+  {w:"fros",cat:"形容詞",m:"冷たい"},
+  {w:"ru",cat:"語根",m:"分ける / 分類する / 整理する / 居場所を作る"},
+  {w:"ily",cat:"語根",m:"歩く、進む"},
+  {w:"nu",cat:"語根",m:"見つける、出会う"},
+  {w:"et",cat:"語根",m:"そして、〜と(接続)"},
+  {w:"oka",cat:"語根",m:"待つ、留まる"},
+  {w:"nel",cat:"語根",m:"望む、願う(「〜したい」を作る)"},
+  {w:"vil",cat:"語根",m:"光る、灯る、微かに輝く"},
+  {w:"vun",cat:"語根",m:"震えて音になる、共鳴する"},
+  {w:"keth",cat:"語根",m:"見つめる、離れない視線、見張る"},
+  {w:"nur",cat:"語根",m:"育てる、育てる人、世話をする"},
+  {w:"yau",cat:"語根",m:"封じる、閉じ込める、動けなくする"},
+  {w:"tal",cat:"語根",m:"言う"},
+  {w:"lis",cat:"語根",m:"聞く"},
+  {w:"vey",cat:"語根",m:"見る"},
+  {w:"fas",cat:"語根",m:"走る"},
+  {w:"zom",cat:"語根",m:"眠る"},
+  {w:"wen",cat:"語根",m:"起きる"},
+  {w:"kir",cat:"語根",m:"書く"},
+  {w:"lom",cat:"語根",m:"歌う"},
+  {w:"yuh",cat:"語根",m:"笑う(ユフフフという感じ)"},
+  {w:"vem",cat:"語根",m:"泣く"},
+  {w:"mun",cat:"語根",m:"食べる"},
+  {w:"lub",cat:"語根",m:"飲む"},
+  {w:"yol",cat:"語根",m:"行く"},
+  {w:"yon",cat:"語根",m:"来る"},
+  {w:"dol",cat:"語根",m:"あげる"},
+  {w:"dor",cat:"語根",m:"もらう"},
+  {w:"fen",cat:"語根",m:"作る"},
+  {w:"hev",cat:"語根",m:"助ける"},
+  {w:"tep",cat:"語根",m:"触る"},
+  {w:"shen",cat:"語根",m:"嫌な思いをさせる、傷つける"},
+  {w:"pon",cat:"語根",m:"跳ねる、嬉しい"},
+  {w:"zuz",cat:"語根",m:"沈む、悲しい"},
+  {w:"rash",cat:"語根",m:"逃げる、怖い"},
+  {w:"pel",cat:"語根",m:"抱きつく、寄り添う、くっつく"},
+  {w:"thyl nur",cat:"固有名詞",m:"花守(やさしさの時間を育てる者)/ ちぬー"},
+  {w:"ruthylri",cat:"固有名詞",m:"独ュ゛さんたちの種族名(やさしさを分け合う者たち)/ ルスュルリ"},
+  {w:"vora",cat:"固有名詞",m:"戦士 / ヴォラ"},
+  {w:"Vayoyo",cat:"固有名詞",m:"ルスュルリで最も強い戦士。けてゃなを封じた者 / ヴァョヨ"},
+  {w:"thylru",cat:"表現",m:"ありがとう(やさしさの時間を分けてくれて) / スュルル"},
+  {w:"shen\u309b",cat:"表現",m:"ごめんなさい / シェン"},
+  {w:"myl-e?",cat:"表現",m:"こんにちは(今、良い感じですか?)/ ミュレ?"},
+  {w:"vi myl\u309b",cat:"表現",m:"さようなら / ヴィ ミュル"},
+  {w:"pon-a",cat:"表現",m:"嬉しい / ポナ"},
+  {w:"zuz-a",cat:"表現",m:"悲しい / ズザ"},
+  {w:"rash-a",cat:"表現",m:"怖い / ラシャ"},
+  {w:"yuaa!",cat:"表現",m:"びっくり! / ユアー!"},
+  {w:"nel pel-a",cat:"表現",m:"すき(抱きつきたい)/ ネル ペラ"},
+  {w:"a",cat:"表現",m:"はい / ア"},
+  {w:"az\u309b",cat:"表現",m:"いいえ / アズ"},
+  {w:"yu!",cat:"表現",m:"わかった!/うん! / ユー!"},
+  {w:"yuuu",cat:"表現",m:"だめ/いや / ユーーー"},
+  {w:"vol-a\u309b",cat:"表現",m:"大丈夫(直訳:良い……)/ ヴォラ"},
+  {w:"mi",cat:"代名詞",m:"私(単数)"},
+  {w:"vi",cat:"代名詞",m:"あなた(単数)"},
+  {w:"ri",cat:"代名詞",m:"彼/彼女/それ(単数、無機物にも使用可)"},
+  {w:"min",cat:"代名詞",m:"私たち"},
+  {w:"vin",cat:"代名詞",m:"あなたたち"},
+  {w:"rin",cat:"代名詞",m:"彼ら/それら"},
+  {w:"un",cat:"表現",m:"何(疑問詞)"},
+  {w:"ur",cat:"表現",m:"誰(疑問詞)"},
+  {w:"uv",cat:"表現",m:"どこ(疑問詞)"},
+  {w:"ul",cat:"表現",m:"いつ(疑問詞)"},
+  {w:"uk",cat:"表現",m:"なぜ(疑問詞)"},
+  {w:"fo",cat:"数字",m:"0"},{w:"la",cat:"数字",m:"1"},{w:"li",cat:"数字",m:"2"},
+  {w:"ly",cat:"数字",m:"3"},{w:"le",cat:"数字",m:"4"},{w:"na",cat:"数字",m:"5"},
+  {w:"ni",cat:"数字",m:"6"},{w:"ny",cat:"数字",m:"7"},{w:"ne",cat:"数字",m:"8"},
+  {w:"sa",cat:"数字",m:"9"},{w:"si",cat:"数字",m:"10"},
+  {w:"sili",cat:"数字",m:"20 (si+li)"},{w:"sily",cat:"数字",m:"30 (si+ly)"},{w:"sile",cat:"数字",m:"40 (si+le)"},
+];
+
+const CONJUGATABLE = [
+  ...SEED.filter(x=>x.cat==="語根" && !["et"].includes(x.w)),
+  ...SEED.filter(x=>x.cat==="形容詞"),
+];
+
+const SUFFIX = [
+  {s:"-a",name:"現在形",desc:"今まさにそうである"},
+  {s:"-i",name:"過去形",desc:"過去にそうだった"},
+  {s:"-y",name:"残響形",desc:"過去に始まって今も続いている"},
+  {s:"-e",name:"疑問形",desc:"問いかけ"},
+];
+
+const CATS = ["すべて","名詞","形容詞","語根","表現","数字","代名詞","固有名詞"];
+
+let vocab = [];
+let activeCat = "すべて";
+let searchTerm = "";
+
+async function loadVocab(){
+  try{
+    const res = await window.storage.get('vocab-list', false);
+    vocab = JSON.parse(res.value);
+  }catch(e){
+    vocab = SEED.slice();
+    try{ await window.storage.set('vocab-list', JSON.stringify(vocab), false); }catch(e2){}
+  }
+}
+async function saveVocab(){
+  try{ await window.storage.set('vocab-list', JSON.stringify(vocab), false); }
+  catch(e){ console.error('save failed', e); }
+}
+
+function renderVocab(){
+  const root = document.getElementById('tab-vocab');
+  const filtered = vocab.filter(x=>{
+    const catOk = activeCat==="すべて" || x.cat===activeCat;
+    const term = searchTerm.trim();
+    const searchOk = !term || x.w.includes(term) || x.m.includes(term);
+    return catOk && searchOk;
+  });
+
+  root.innerHTML = `
+    <p class="eyebrow">記録 · 単語</p>
+    <h2 class="section-title">単語帳</h2>
+    <div class="searchbar">
+      <input id="search-input" placeholder="単語や意味で検索" value="${escapeAttr(searchTerm)}">
+    </div>
+    <div class="chips" id="cat-chips">
+      ${CATS.map(c=>`<button class="chip ${c===activeCat?'active':''}" data-cat="${c}">${c}</button>`).join('')}
+    </div>
+    <div class="card" style="border-color:var(--echo-dim);">
+      <label>単語を追加</label>
+      <input id="new-word" placeholder="単語 (例: mylhana)">
+      <select id="new-cat">
+        ${CATS.filter(c=>c!=="すべて").map(c=>`<option value="${c}">${c}</option>`).join('')}
+      </select>
+      <textarea id="new-meaning" rows="2" placeholder="意味"></textarea>
+      <button class="primary" id="add-word-btn">単語帳に追加</button>
+    </div>
+    <div id="word-list"></div>
+  `;
+
+  const list = document.getElementById('word-list');
+  if(filtered.length===0){
+    list.innerHTML = `<div class="empty">この条件の単語はまだありません。</div>`;
+  }else{
+    list.innerHTML = filtered.map((x,idx)=>{
+      const realIdx = vocab.indexOf(x);
+      return `
+      <div class="card">
+        <div class="row">
+          <div>
+            <span class="word">${esc(x.w)}</span>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <span class="tag">${esc(x.cat)}</span>
+            <button class="small-btn" data-del="${realIdx}">削除</button>
+          </div>
+        </div>
+        <div class="meaning">${esc(x.m)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  document.getElementById('search-input').oninput = (e)=>{ searchTerm = e.target.value; renderVocab(); };
+  document.querySelectorAll('#cat-chips .chip').forEach(b=>{
+    b.onclick = ()=>{ activeCat = b.dataset.cat; renderVocab(); };
+  });
+  document.getElementById('add-word-btn').onclick = async ()=>{
+    const w = document.getElementById('new-word').value.trim();
+    const cat = document.getElementById('new-cat').value;
+    const m = document.getElementById('new-meaning').value.trim();
+    if(!w || !m) return;
+    vocab.push({w,cat,m});
+    await saveVocab();
+    renderVocab();
+  };
+  document.querySelectorAll('[data-del]').forEach(b=>{
+    b.onclick = async ()=>{
+      vocab.splice(parseInt(b.dataset.del),1);
+      await saveVocab();
+      renderVocab();
+    };
+  });
+}
+
+function esc(s){ return (s+"").replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function escAttr(s){ return esc(s).replace(/"/g,'&quot;'); }
+
+// ---------- 活用ドリル ----------
+let selectedRoot = CONJUGATABLE[0];
+let drillTarget = null;
+
+function conjugate(root, suffix){
+  return root + suffix;
+}
+
+function renderConj(){
+  const root = document.getElementById('tab-conj');
+  root.innerHTML = `
+    <p class="eyebrow">記録 · 活用</p>
+    <h2 class="section-title">活用ドリル</h2>
+    <div class="card">
+      <label>語根 / 形容詞を選ぶ</label>
+      <select id="root-select">
+        ${CONJUGATABLE.map(x=>`<option value="${esc(x.w)}" ${x.w===selectedRoot.w?'selected':''}>${esc(x.w)} — ${esc(x.m)}</option>`).join('')}
+      </select>
+      <div class="conj-table">
+        ${SUFFIX.map(s=>`
+          <div class="conj-cell">
+            <div class="suffix">${s.s} <span style="color:var(--mist-dim)">${s.name}</span></div>
+            <div class="form">${esc(selectedRoot.w)}${s.s}</div>
+            <div class="gloss">${s.desc}</div>
+          </div>`).join('')}
+      </div>
+      <div class="meaning" style="margin-top:8px;">゛(余情記号)を末尾に添えると、言い切れない感情の余白を表せる。例: <span class="mark">${esc(selectedRoot.w)}-y\u309b</span></div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow" style="margin-bottom:10px;">練習</div>
+      <div class="drill-box">
+        <div class="drill-prompt" id="drill-prompt"></div>
+        <input id="drill-input" placeholder="ruthylri語で入力(例: nu-y)">
+        <button class="primary" id="drill-check">答え合わせ</button>
+        <button class="ghost" id="drill-next" style="margin-left:8px;">次の問題</button>
+        <div class="feedback" id="drill-feedback"></div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('root-select').onchange = (e)=>{
+    selectedRoot = CONJUGATABLE.find(x=>x.w===e.target.value);
+    renderConj();
+  };
+  document.getElementById('drill-next').onclick = nextDrill;
+  document.getElementById('drill-check').onclick = checkDrill;
+  if(!drillTarget) nextDrill(); else showDrillPrompt();
+}
+
+function nextDrill(){
+  const root = CONJUGATABLE[Math.floor(Math.random()*CONJUGATABLE.length)];
+  const suf = SUFFIX[Math.floor(Math.random()*SUFFIX.length)];
+  drillTarget = {root, suf};
+  showDrillPrompt();
+}
+function showDrillPrompt(){
+  const {root,suf} = drillTarget;
+  document.getElementById('drill-prompt').innerHTML =
+    `「<b>${esc(root.m)}</b>」を <b>${suf.name}(${suf.s})</b> にすると?`;
+  document.getElementById('drill-input').value = '';
+  document.getElementById('drill-feedback').textContent = '';
+  document.getElementById('drill-feedback').className = 'feedback';
+}
+function checkDrill(){
+  const val = document.getElementById('drill-input').value.trim().replace(/\u309b$/,'');
+  const {root,suf} = drillTarget;
+  const answer = conjugate(root.w, suf.s);
+  const fb = document.getElementById('drill-feedback');
+  if(val.toLowerCase() === answer.toLowerCase()){
+    fb.textContent = `正解 — ${answer}`;
+    fb.className = 'feedback correct';
+  }else{
+    fb.textContent = `おしい。正解は ${answer}`;
+    fb.className = 'feedback wrong';
+  }
+}
+
+// ---------- クイズ ----------
+let quizScore = {correct:0, total:0};
+let currentQuiz = null;
+
+async function loadScore(){
+  try{
+    const res = await window.storage.get('quiz-score', false);
+    quizScore = JSON.parse(res.value);
+  }catch(e){ quizScore = {correct:0,total:0}; }
+}
+async function saveScore(){
+  try{ await window.storage.set('quiz-score', JSON.stringify(quizScore), false); }catch(e){}
+}
+
+function buildQuizQuestion(){
+  const pool = vocab.filter(x=>x.cat!=="数字");
+  const target = pool[Math.floor(Math.random()*pool.length)];
+  const distractors = pool.filter(x=>x!==target).sort(()=>Math.random()-0.5).slice(0,3);
+  const options = [target, ...distractors].sort(()=>Math.random()-0.5);
+  const askWord = Math.random() < 0.5;
+  return {target, options, askWord};
+}
+
+function renderQuiz(){
+  const root = document.getElementById('tab-quiz');
+  currentQuiz = buildQuizQuestion();
+  const {target, options, askWord} = currentQuiz;
+
+  root.innerHTML = `
+    <p class="eyebrow">記録 · 確認</p>
+    <h2 class="section-title">クイズ</h2>
+    <div class="score-strip">
+      <span>正解数 <b>${quizScore.correct}</b> / ${quizScore.total}</span>
+      <button class="ghost" id="reset-score">スコアをリセット</button>
+    </div>
+    <div class="card">
+      <div class="drill-prompt">
+        ${askWord
+          ? `<span class="word" style="font-size:20px;">${esc(target.w)}</span> の意味は?`
+          : `「<b>${esc(target.m)}</b>」を表す単語は?`}
+      </div>
+      <div id="quiz-options"></div>
+      <div class="feedback" id="quiz-feedback"></div>
+    </div>
+  `;
+
+  const optRoot = document.getElementById('quiz-options');
+  optRoot.innerHTML = options.map((o,i)=>`
+    <button class="quiz-choice" data-idx="${i}">${askWord ? esc(o.m) : esc(o.w)}</button>
+  `).join('');
+
+  document.getElementById('reset-score').onclick = async ()=>{
+    quizScore = {correct:0,total:0};
+    await saveScore();
+    renderQuiz();
+  };
+
+  document.querySelectorAll('.quiz-choice').forEach(btn=>{
+    btn.onclick = async ()=>{
+      const chosen = options[parseInt(btn.dataset.idx)];
+      const isCorrect = chosen===target;
+      document.querySelectorAll('.quiz-choice').forEach(b=>b.disabled=true);
+      btn.classList.add(isCorrect?'correct':'wrong');
+      if(!isCorrect){
+        document.querySelectorAll('.quiz-choice').forEach(b=>{
+          const o = options[parseInt(b.dataset.idx)];
+          if(o===target) b.classList.add('correct');
+        });
+      }
+      quizScore.total += 1;
+      if(isCorrect) quizScore.correct += 1;
+      await saveScore();
+      const fb = document.getElementById('quiz-feedback');
+      fb.textContent = isCorrect ? '正解 — 残響が続いている……' : `不正解。正解は ${askWord?target.m:target.w}`;
+      fb.className = 'feedback ' + (isCorrect?'correct':'wrong');
+      setTimeout(renderQuiz, 1300);
+    };
+  });
+}
+
+function escapeAttr(s){ return esc(s).replace(/"/g,'&quot;'); }
+
+// ---------- タブ切り替え ----------
+document.querySelectorAll('nav button').forEach(btn=>{
+  btn.onclick = ()=>{
+    document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    ['vocab','conj','quiz'].forEach(t=>{
+      document.getElementById('tab-'+t).classList.toggle('hidden', 'tab-'+t !== 'tab-'+btn.dataset.tab);
+    });
+  };
+});
+
+(async function init(){
+  await loadVocab();
+  await loadScore();
+  renderVocab();
+  renderConj();
+  renderQuiz();
+})();
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
