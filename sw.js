@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruthylri-cache-v1";
+const CACHE_NAME = "ruthylri-cache-v2";
 const ASSETS = [
   "./index.html",
   "./manifest.json",
@@ -23,16 +23,15 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
+  // ネットワークを優先して最新版を取得し、オフライン時だけキャッシュを使う。
+  // (キャッシュ優先だと、サーバーを更新してもずっと古い画面が表示され続けてしまうため)
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      return (
-        cached ||
-        fetch(event.request).then((res) => {
-          const resClone = res.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, resClone));
-          return res;
-        }).catch(() => cached)
-      );
-    })
+    fetch(event.request)
+      .then((res) => {
+        const resClone = res.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, resClone));
+        return res;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
