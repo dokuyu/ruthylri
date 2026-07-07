@@ -2,15 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ruthylri 学習帳</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#171423">
-<link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="ruthylri">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
@@ -142,11 +134,13 @@ button.ghost:hover{border-color:var(--mist-dim);color:var(--mist);}
   <nav>
     <button class="active" data-tab="vocab">単語帳</button>
     <button data-tab="conj">活用ドリル</button>
+    <button data-tab="sentence">文章</button>
     <button data-tab="quiz">クイズ</button>
   </nav>
 
   <div id="tab-vocab"></div>
   <div id="tab-conj" class="hidden"></div>
+  <div id="tab-sentence" class="hidden"></div>
   <div id="tab-quiz" class="hidden"></div>
 
 </div>
@@ -262,6 +256,37 @@ const SUFFIX = [
 
 const CATS = ["すべて","名詞","形容詞","語根","表現","数字","代名詞","固有名詞"];
 
+const SENTENCE_PATTERNS = [
+  {name:"平叙文", example:"mi syl ruma-a", ja:"私は豊かなごはんを食べる", note:"主語 + (形容詞) + 名詞/語根-語尾 の順(SOV)"},
+  {name:"平叙文(単純)", example:"mi mamm-a", ja:"私は満たされている", note:"主語 + 述語-語尾。形容詞や名詞は単独で述語になれる"},
+  {name:"疑問文", example:"un ruma-e?", ja:"何を食べますか?", note:"疑問詞(un/ur/uv/ul/uk) + 述語-e?"},
+  {name:"疑問文(主語あり)", example:"ri syl-e?", ja:"彼/彼女(それ)は豊かですか?", note:"主語 + 述語-e?"},
+  {name:"願望(パターンA)", example:"mi ruma nel-a\u309b", ja:"私はごはんを食べたい", note:"主語 + 名詞 + nel-語尾"},
+  {name:"願望(パターンB)", example:"nel oka-a", ja:"待ちたい", note:"nel + 語根-語尾"},
+];
+
+const SENTENCE_BANK = [
+  {tokens:["mi","syl","ruma-a"], ja:"私は豊かなごはんを食べる"},
+  {tokens:["mi","ruma","nel-a\u309b"], ja:"私はごはんを食べたい"},
+  {tokens:["un","ruma-e?"], ja:"何を食べますか?"},
+  {tokens:["ur","nu-i","vi?"], ja:"誰を見つけましたか?"},
+  {tokens:["uv","thyl","nur-a?"], ja:"花守はどこにいますか?"},
+  {tokens:["nel","ruma-a"], ja:"ごはんが食べたい"},
+  {tokens:["nel","oka-a"], ja:"待ちたい"},
+  {tokens:["nel","nu-i"], ja:"見つけたかった"},
+  {tokens:["mi","mamm-a"], ja:"私は満たされている"},
+  {tokens:["vi","thyl-y\u309b"], ja:"あなたのやさしさの時間が、今も続いている……"},
+  {tokens:["min","ruma-a"], ja:"私たちはご飯を分け合っている"},
+  {tokens:["ri","syl-e?"], ja:"彼/彼女(それ)は豊かですか?"},
+];
+
+const STORY = [
+  {tokens:["keth","vora,","thur-i\u309b."], ja:"けてゃなの戦士、それは強かった……"},
+  {tokens:["Vayoyo,","ruthylri","thur-y\u309b","vora,","keth","yau-i","ri."], ja:"ヴァョヨ──ルスュルリの中で最も強い戦士──が、けてゃなを封じた。"},
+  {tokens:["keth","ily-e\u309b...","vine-i\u309b."], ja:"けてゃなは、もう歩けない……(それが)長く続いている。"},
+  {tokens:["et","ri","nu-a\u309b,","ruthylri","nu-i","ri,","ri","ruma-a\u309b."], ja:"そして今も──近づいたルスュルリを見つけると、けてゃなはそれを食べる……"},
+];
+
 let vocab = [];
 let activeCat = "すべて";
 let searchTerm = "";
@@ -280,74 +305,35 @@ async function saveVocab(){
   catch(e){ console.error('save failed', e); }
 }
 
-let vocabShellBuilt = false;
-
 function renderVocab(){
   const root = document.getElementById('tab-vocab');
-
-  // 初回だけ枠(検索欄・チップ・追加フォーム)を作る。
-  // 以降は中身(単語リストやチップの選択状態)だけを更新し、
-  // 検索欄自体を作り直さないようにする(作り直すとフォーカスが外れてキーボードが閉じてしまうため)。
-  if(!vocabShellBuilt){
-    root.innerHTML = `
-      <p class="eyebrow">記録 · 単語</p>
-      <h2 class="section-title">単語帳</h2>
-      <div class="searchbar">
-        <input id="search-input" placeholder="単語や意味で検索" value="${escapeAttr(searchTerm)}">
-      </div>
-      <div class="chips" id="cat-chips">
-        ${CATS.map(c=>`<button class="chip ${c===activeCat?'active':''}" data-cat="${c}">${c}</button>`).join('')}
-      </div>
-      <div class="card" style="border-color:var(--echo-dim);">
-        <label>単語を追加</label>
-        <input id="new-word" placeholder="単語 (例: mylhana)">
-        <select id="new-cat">
-          ${CATS.filter(c=>c!=="すべて").map(c=>`<option value="${c}">${c}</option>`).join('')}
-        </select>
-        <textarea id="new-meaning" rows="2" placeholder="意味"></textarea>
-        <button class="primary" id="add-word-btn">単語帳に追加</button>
-      </div>
-      <div id="word-list"></div>
-    `;
-
-    document.getElementById('search-input').oninput = (e)=>{
-      searchTerm = e.target.value;
-      renderWordList();
-    };
-    document.getElementById('add-word-btn').onclick = async ()=>{
-      const w = document.getElementById('new-word').value.trim();
-      const cat = document.getElementById('new-cat').value;
-      const m = document.getElementById('new-meaning').value.trim();
-      if(!w || !m) return;
-      vocab.push({w,cat,m});
-      await saveVocab();
-      document.getElementById('new-word').value = '';
-      document.getElementById('new-meaning').value = '';
-      renderWordList();
-    };
-
-    vocabShellBuilt = true;
-  }
-
-  renderChips();
-  renderWordList();
-}
-
-function renderChips(){
-  const chipsRoot = document.getElementById('cat-chips');
-  chipsRoot.innerHTML = CATS.map(c=>`<button class="chip ${c===activeCat?'active':''}" data-cat="${c}">${c}</button>`).join('');
-  chipsRoot.querySelectorAll('.chip').forEach(b=>{
-    b.onclick = ()=>{ activeCat = b.dataset.cat; renderChips(); renderWordList(); };
-  });
-}
-
-function renderWordList(){
   const filtered = vocab.filter(x=>{
     const catOk = activeCat==="すべて" || x.cat===activeCat;
     const term = searchTerm.trim();
     const searchOk = !term || x.w.includes(term) || x.m.includes(term);
     return catOk && searchOk;
   });
+
+  root.innerHTML = `
+    <p class="eyebrow">記録 · 単語</p>
+    <h2 class="section-title">単語帳</h2>
+    <div class="searchbar">
+      <input id="search-input" placeholder="単語や意味で検索" value="${escapeAttr(searchTerm)}">
+    </div>
+    <div class="chips" id="cat-chips">
+      ${CATS.map(c=>`<button class="chip ${c===activeCat?'active':''}" data-cat="${c}">${c}</button>`).join('')}
+    </div>
+    <div class="card" style="border-color:var(--echo-dim);">
+      <label>単語を追加</label>
+      <input id="new-word" placeholder="単語 (例: mylhana)">
+      <select id="new-cat">
+        ${CATS.filter(c=>c!=="すべて").map(c=>`<option value="${c}">${c}</option>`).join('')}
+      </select>
+      <textarea id="new-meaning" rows="2" placeholder="意味"></textarea>
+      <button class="primary" id="add-word-btn">単語帳に追加</button>
+    </div>
+    <div id="word-list"></div>
+  `;
 
   const list = document.getElementById('word-list');
   if(filtered.length===0){
@@ -371,11 +357,24 @@ function renderWordList(){
     }).join('');
   }
 
-  list.querySelectorAll('[data-del]').forEach(b=>{
+  document.getElementById('search-input').oninput = (e)=>{ searchTerm = e.target.value; renderVocab(); };
+  document.querySelectorAll('#cat-chips .chip').forEach(b=>{
+    b.onclick = ()=>{ activeCat = b.dataset.cat; renderVocab(); };
+  });
+  document.getElementById('add-word-btn').onclick = async ()=>{
+    const w = document.getElementById('new-word').value.trim();
+    const cat = document.getElementById('new-cat').value;
+    const m = document.getElementById('new-meaning').value.trim();
+    if(!w || !m) return;
+    vocab.push({w,cat,m});
+    await saveVocab();
+    renderVocab();
+  };
+  document.querySelectorAll('[data-del]').forEach(b=>{
     b.onclick = async ()=>{
       vocab.splice(parseInt(b.dataset.del),1);
       await saveVocab();
-      renderWordList();
+      renderVocab();
     };
   });
 }
@@ -459,6 +458,121 @@ function checkDrill(){
     fb.textContent = `おしい。正解は ${answer}`;
     fb.className = 'feedback wrong';
   }
+}
+
+// ---------- 文章 ----------
+let scrambleTarget = null;
+let scrambleBuilt = [];
+let scramblePool = [...SENTENCE_BANK, ...STORY];
+
+function newScramble(){
+  const s = scramblePool[Math.floor(Math.random()*scramblePool.length)];
+  scrambleTarget = s;
+  scrambleBuilt = [];
+  scrambleTarget._order = null;
+  renderScramble();
+}
+
+function renderScramble(){
+  const wrap = document.getElementById('scramble-area');
+  if(!wrap) return;
+  if(!scrambleTarget._order){
+    scrambleTarget._order = scrambleTarget.tokens.map((_,i)=>i).sort(()=>Math.random()-0.5);
+  }
+  const orderedRemaining = scrambleTarget._order.filter(i=>!scrambleBuilt.includes(i));
+
+  wrap.innerHTML = `
+    <div class="drill-prompt">「<b>${esc(scrambleTarget.ja)}</b>」を正しい順に並べよう</div>
+    <div style="min-height:44px;padding:10px;background:var(--void);border:.5px solid var(--line);border-radius:8px;margin-bottom:10px;font-family:'JetBrains Mono','Zen Kaku Gothic New',monospace;color:var(--echo);">
+      ${scrambleBuilt.map(i=>esc(scrambleTarget.tokens[i])).join(' ') || '<span style="color:var(--mist-dim);font-family:\'Zen Kaku Gothic New\',sans-serif;">ここに単語をタップして並べる</span>'}
+    </div>
+    <div id="scramble-tokens">
+      ${orderedRemaining.map(i=>`<button class="chip" style="font-family:'JetBrains Mono','Zen Kaku Gothic New',monospace;" data-i="${i}">${esc(scrambleTarget.tokens[i])}</button>`).join('')}
+    </div>
+    <div style="margin-top:12px;">
+      <button class="primary" id="scramble-check">答え合わせ</button>
+      <button class="ghost" id="scramble-reset" style="margin-left:8px;">やり直し</button>
+      <button class="ghost" id="scramble-next" style="margin-left:8px;">次の文章</button>
+    </div>
+    <div class="feedback" id="scramble-feedback"></div>
+  `;
+
+  wrap.querySelectorAll('#scramble-tokens .chip').forEach(b=>{
+    b.onclick = ()=>{ scrambleBuilt.push(parseInt(b.dataset.i)); renderScramble(); };
+  });
+  document.getElementById('scramble-reset').onclick = ()=>{ scrambleBuilt=[]; renderScramble(); };
+  document.getElementById('scramble-next').onclick = newScramble;
+  document.getElementById('scramble-check').onclick = ()=>{
+    const fb = document.getElementById('scramble-feedback');
+    const correct = scrambleBuilt.length===scrambleTarget.tokens.length &&
+      scrambleBuilt.every((v,idx)=>v===idx);
+    if(correct){
+      fb.textContent = '正解 — きれいに並んだ……';
+      fb.className = 'feedback correct';
+    }else{
+      fb.textContent = `まだ違うよ。正解: ${scrambleTarget.tokens.join(' ')}`;
+      fb.className = 'feedback wrong';
+    }
+  };
+}
+
+const PRONOUNS = [{v:"mi",m:"私は"},{v:"vi",m:"あなたは"},{v:"ri",m:"彼/彼女/それは"},{v:"min",m:"私たちは"},{v:"vin",m:"あなたたちは"},{v:"rin",m:"彼らは"}];
+const ADJ_FOR_BUILDER = SEED.filter(x=>x.cat==="形容詞");
+const NOUN_FOR_BUILDER = SEED.filter(x=>x.cat==="名詞");
+
+function renderBuilder(){
+  const pronoun = document.getElementById('b-pronoun').value;
+  const adj = document.getElementById('b-adj').value;
+  const noun = document.getElementById('b-noun').value;
+  const suf = document.getElementById('b-suffix').value;
+  const mark = document.getElementById('b-mark').checked ? '\u309b' : '';
+  const parts = [pronoun];
+  if(adj) parts.push(adj);
+  parts.push(noun + suf + mark);
+  document.getElementById('builder-output').innerHTML =
+    `<span class="word" style="font-size:19px;">${esc(parts.join(' '))}</span>`;
+}
+
+function renderSentence(){
+  const root = document.getElementById('tab-sentence');
+  root.innerHTML = `
+    <p class="eyebrow">記録 · 文章</p>
+    <h2 class="section-title">文型パターン</h2>
+    ${SENTENCE_PATTERNS.map(p=>`
+      <div class="card">
+        <div class="row">
+          <span class="tag">${esc(p.name)}</span>
+        </div>
+        <div class="word" style="margin-top:8px;">${esc(p.example)}</div>
+        <div class="meaning">${esc(p.ja)}</div>
+        <div class="meaning" style="color:var(--warmth);margin-top:4px;">${esc(p.note)}</div>
+      </div>
+    `).join('')}
+
+    <h2 class="section-title" style="margin-top:28px;">組み立てクイズ</h2>
+    <div class="card" id="scramble-area"></div>
+
+    <h2 class="section-title" style="margin-top:28px;">文章メーカー</h2>
+    <div class="card">
+      <label>主語</label>
+      <select id="b-pronoun">${PRONOUNS.map(p=>`<option value="${p.v}">${p.v} (${p.m})</option>`).join('')}</select>
+      <label>形容詞(任意)</label>
+      <select id="b-adj"><option value="">(なし)</option>${ADJ_FOR_BUILDER.map(a=>`<option value="${esc(a.w)}">${esc(a.w)} — ${esc(a.m.split(' / ')[0])}</option>`).join('')}</select>
+      <label>名詞</label>
+      <select id="b-noun">${NOUN_FOR_BUILDER.map(n=>`<option value="${esc(n.w)}">${esc(n.w)} — ${esc(n.m.split(' / ')[0])}</option>`).join('')}</select>
+      <label>語尾</label>
+      <select id="b-suffix">${SUFFIX.map(s=>`<option value="${s.s}">${s.s} (${s.name})</option>`).join('')}</select>
+      <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="b-mark" style="width:auto;margin:0;"> ゛(余情記号)を添える</label>
+      <div style="background:var(--void);border:.5px solid var(--line);border-radius:8px;padding:14px;margin-top:8px;" id="builder-output"></div>
+      <div class="meaning" style="margin-top:8px;">主語+(形容詞)+名詞-語尾 のSOVパターンで組み立てた文。実際の語感に合うかは要練習(独自表現として楽しんでOK)。</div>
+    </div>
+  `;
+
+  ['b-pronoun','b-adj','b-noun','b-suffix','b-mark'].forEach(id=>{
+    document.getElementById(id).onchange = renderBuilder;
+  });
+  renderBuilder();
+  newScramble();
 }
 
 // ---------- クイズ ----------
@@ -548,7 +662,7 @@ document.querySelectorAll('nav button').forEach(btn=>{
   btn.onclick = ()=>{
     document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
-    ['vocab','conj','quiz'].forEach(t=>{
+    ['vocab','conj','sentence','quiz'].forEach(t=>{
       document.getElementById('tab-'+t).classList.toggle('hidden', 'tab-'+t !== 'tab-'+btn.dataset.tab);
     });
   };
@@ -559,14 +673,9 @@ document.querySelectorAll('nav button').forEach(btn=>{
   await loadScore();
   renderVocab();
   renderConj();
+  renderSentence();
   renderQuiz();
 })();
-
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("sw.js").catch(() => {});
-  });
-}
 </script>
 </body>
 </html>
