@@ -649,7 +649,7 @@ function renderQuiz(){
       if(isCorrect) quizScore.correct += 1;
       await saveScore();
       const fb = document.getElementById('quiz-feedback');
-      fb.textContent = isCorrect ? '正解 — 残響が続いている……' : `不正解。正解は ${askWord?target.m:target.w}`;
+      fb.textContent = isCorrect ? '正解！' : `不正解。正解は ${askWord?target.m:target.w}`;
       fb.className = 'feedback ' + (isCorrect?'correct':'wrong');
       setTimeout(renderQuiz, 1300);
     };
